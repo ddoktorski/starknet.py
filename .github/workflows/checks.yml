@@ -121,6 +121,7 @@ jobs:
 
   run-tests:
     name: Tests
+    if: ${{ github.event_name != 'pull_request' }}
     env:
       STARKNET_VERSION: "0.12.3"
       RPC_SPEC_VERSION: "0.5.1"
@@ -282,7 +283,7 @@ jobs:
   # ---------------------------------------------------------- #
 
   run-tests-windows:
-    if: ${{ github.event_name != 'pull_request' }}
+    # if: ${{ github.event_name != 'pull_request' }}
     name: Tests Windows
     needs: setup-tests
     runs-on: windows-latest
@@ -314,12 +315,11 @@ jobs:
         run: |
           sudo apt-get -y update
           sudo apt install -y wget software-properties-common
-          sudo add-apt-repository ppa:deadsnakes/ppa
-          sudo apt install -y python3.9
-          apt-get install -y python3-pip
-          sudo apt install -y libgmp3-dev
+          sudo apt-get install -y rustc
+          rustc --version
+          cargo --version
           sudo apt-get install -y git
-          pip3 install git+https://github.com/0xSpaceShard/starknet-devnet.git@v0.6.2
+          cargo install --locked --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --rev 78527de
 
       # ====================== SETUP PYTHON ====================== #
 
@@ -351,6 +351,8 @@ jobs:
           poetry run poe circular_imports_check
 
       - name: Run tests
+        env:
+          DEVNET_PATH: starknet-devnet
         run: |
           poetry run poe test_ci_v2
           poetry run poe test_ci_v1
@@ -462,12 +464,9 @@ jobs:
         run: |
           sudo apt-get -y update
           sudo apt install -y wget software-properties-common
-          sudo add-apt-repository ppa:deadsnakes/ppa
-          sudo apt install -y python3.9
-          apt-get install -y python3-pip
-          sudo apt install -y libgmp3-dev
           sudo apt-get install -y git
-          pip3 install git+https://github.com/0xSpaceShard/starknet-devnet.git@v0.6.2
+          sudo apt install rustc
+          cargo install --locked --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --rev 78527de
 
       # ====================== SETUP PYTHON ====================== #
 
@@ -495,6 +494,8 @@ jobs:
       # ====================== RUN TESTS ====================== #
 
       - name: Run tests
+        env:
+          DEVNET_PATH: starknet-devnet
         run: |
           poetry run poe test_ci_docs_v2
           poetry run poe test_ci_docs_v1
