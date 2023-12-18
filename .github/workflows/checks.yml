@@ -8,8 +8,7 @@ env:
 on:
   push:
     branches:
-      - master
-      - development
+      - 1179-devnet-rs-windows
   pull_request:
   workflow_dispatch:
 
@@ -202,6 +201,7 @@ jobs:
   # ---------------------------------------------------------- #
 
   run-tests-on-networks:
+    if: ${{ github.event_name != 'push' }}
     name: Tests on networks (testnet and integration)
     needs: setup-tests
     runs-on: ubuntu-latest
@@ -273,7 +273,6 @@ jobs:
   # ---------------------------------------------------------- #
 
   run-tests-windows:
-    if: ${{ github.event_name != 'pull_request' }}
     name: Tests Windows
     needs: setup-tests
     runs-on: windows-latest
@@ -421,7 +420,6 @@ jobs:
   # ---------------------------------------------------------- #
 
   run-docs-tests-windows:
-    if: ${{ github.event_name != 'pull_request' }}
     name: Docs Tests Windows
     needs: setup-tests
     runs-on: windows-latest
