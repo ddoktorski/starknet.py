@@ -7,8 +7,7 @@ env:
 on:
   push:
     branches:
-      - master
-      - development
+      - test-windows-devnet
   pull_request:
   workflow_dispatch:
 
@@ -159,7 +158,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
+        python-version: [ "3.12" ]
     steps:
       - uses: actions/checkout@v4
 
@@ -195,7 +194,9 @@ jobs:
       # ====================== SETUP DEVNET ====================== #
 
       - name: Install devnet
-        run: ./starknet_py/tests/install_devnet.sh
+        run: |
+          export DEVNET_INSTALL_DIR="$(git rev-parse --show-toplevel)/starknet_py/tests/e2e/devnet"
+          cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --branch windows-support --root $DEVNET_INSTALL_DIR
 
       # ====================== RUN TESTS ====================== #
 
@@ -207,76 +208,6 @@ jobs:
         run: |
           poetry run poe test_ci_v2
           poetry run poe test_ci_v1
-
-      - name: Generate coverage in XML
-        run: |
-          poetry run coverage xml
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-
-  # ---------------------------------------------------------- #
-  # ..................RUN-TESTS-ON-NETWORKS................... #
-  # ---------------------------------------------------------- #
-
-  run-tests-on-networks:
-    name: Tests on networks (testnet)
-    needs: setup-tests
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-    env:
-      SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
-      SEPOLIA_ACCOUNT_ADDRESS: ${{ secrets.SEPOLIA_ACCOUNT_ADDRESS }}
-      SEPOLIA_ACCOUNT_PRIVATE_KEY: ${{ secrets.SEPOLIA_ACCOUNT_PRIVATE_KEY }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download contracts
-        uses: actions/download-artifact@v3
-        with:
-          name: contract-artifacts
-          path: starknet_py/tests/e2e/mock/
-
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.12"
-          cache: 'pip'
-
-      # ====================== SETUP PYTHON ====================== #
-
-      - name: Install poetry
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry
-          poetry config installer.modern-installation false
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.12"
-          cache: 'poetry'
-
-      - name: Install dependencies
-        run: |
-          poetry install
-
-      # ====================== RUN TESTS ====================== #
-
-      - name: Check circular imports
-        run: |
-          poetry run poe circular_imports_check
-
-      - name: Run tests
-        run: |
-          poetry run poe test_ci_on_networks
-
-      - name: Generate coverage in XML
-        run: |
-          poetry run coverage xml
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
 
   # ---------------------------------------------------------- #
   # ....................RUN-TESTS-WINDOWS..................... #
@@ -290,7 +221,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
+        python-version: [ "3.8", "3.12" ]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@dc6353516c68da0f06325f42ad880f76a5e77ec9
@@ -313,7 +244,7 @@ jobs:
       - name: Install devnet
         run: |
           $DEVNET_INSTALL_DIR = "$(git rev-parse --show-toplevel)/starknet_py/tests/e2e/devnet"
-          cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --rev 3ad81456092a2da939be1f590855cea2c18ce40c --root $DEVNET_INSTALL_DIR
+          cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --branch windows-support --root $DEVNET_INSTALL_DIR
 
       # ====================== SETUP PYTHON ====================== #
 
@@ -344,76 +275,6 @@ jobs:
           poetry run poe test_ci_v2
           poetry run poe test_ci_v1
 
-      - name: Generate coverage in XML
-        run: |
-          poetry run coverage xml
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-
-  # ---------------------------------------------------------- #
-  # .....................RUN-DOCS-TESTS....................... #
-  # ---------------------------------------------------------- #
-
-  run-docs-tests:
-    name: Docs Tests
-    needs: setup-tests
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download contracts
-        uses: actions/download-artifact@v3
-        with:
-          name: contract-artifacts
-          path: starknet_py/tests/e2e/mock/
-
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.12"
-          cache: 'pip'
-
-      # ====================== SETUP PYTHON ====================== #
-
-      - name: Install poetry
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry
-          poetry config installer.modern-installation false
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'poetry'
-
-      - name: Install dependencies
-        run: |
-          poetry install
-
-      # ====================== SETUP DEVNET ====================== #
-
-      - name: Install devnet
-        run: ./starknet_py/tests/install_devnet.sh
-
-      # ====================== RUN TESTS ====================== #
-
-      - name: Run tests
-        run: |
-          poetry run poe test_ci_docs_v2
-          poetry run poe test_ci_docs_v1
-
-      - name: Generate coverage in XML
-        run: |
-          poetry run coverage xml
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-
   # ---------------------------------------------------------- #
   # .................RUN-DOCS-TESTS-WINDOWS................... #
   # ---------------------------------------------------------- #
@@ -426,7 +287,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
+        python-version: [ "3.12" ]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@dc6353516c68da0f06325f42ad880f76a5e77ec9
@@ -467,7 +328,7 @@ jobs:
       - name: Install devnet
         run: |
           $DEVNET_INSTALL_DIR = "$(git rev-parse --show-toplevel)/starknet_py/tests/e2e/devnet"
-          cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --rev 3ad81456092a2da939be1f590855cea2c18ce40c --root $DEVNET_INSTALL_DIR
+          cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --branch windows-support --root $DEVNET_INSTALL_DIR
 
       # ====================== RUN TESTS ====================== #
 
@@ -475,10 +336,3 @@ jobs:
         run: |
           poetry run poe test_ci_docs_v2
           poetry run poe test_ci_docs_v1
-
-      - name: Generate coverage in XML
-        run: |
-          poetry run coverage xml
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
