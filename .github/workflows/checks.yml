@@ -205,6 +205,19 @@ jobs:
       - name: Pull speculos image
         run: docker pull ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools
 
+      - name: Clone LedgerHQ Starknet app repository
+        run: git clone https://github.com/LedgerHQ/app-starknet.git
+
+      - name: Build the app inside Docker container
+        uses: addnab/docker-run-action@v3
+        with:
+          image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools
+          options: --rm -v ${{ github.workspace }}:/apps
+          run: |
+            cd /apps/app-starknet
+            cargo clean
+            cargo ledger build nanox
+
       - name: Start Speculos emulator container
         uses: addnab/docker-run-action@v3
         with:
@@ -219,7 +232,7 @@ jobs:
             /apps/app-starknet/target/nanox/release/starknet
 
       - name: Wait for Speculos to start
-        run: sleep 5
+        run: sleep 120
 
       - name: Show running containers
         run: |
