@@ -3,7 +3,7 @@ name: Checks
 env:
   CAIRO_LANG_VERSION: "0.13.1"
   # TODO(#1611)
-  DEVNET_SHA: 7ed5a9675746d1d9bdb108cecf950d6f611caa9d # v0.8.0-rc.0
+  DEVNET_SHA: b761edef5b89a4faa7a972d7172a324cd646d612 # v0.7.0
   LEDGER_APP_SHA: 768a7b47b0da681b28112342edd76e2c9b292c4e # v2.3.1
   LEDGER_APP_DEV_TOOLS_SHA: a845b2ab0b5dd824133f73858f6f373edea85ec1bd828245bf50ce9700f33bcb # v4.5.0
 
@@ -83,7 +83,7 @@ jobs:
       # ====================== SETUP ====================== #
 
       - uses: actions/checkout@v4
-      - uses: asdf-vm/actions/setup@b7bcd026f18772e44fe1026d729e1611cc435d47 # v4.0.1
+      - uses: asdf-vm/actions/setup@v3
       - uses: actions/setup-python@v5
         with:
           python-version: "3.14"
@@ -126,76 +126,6 @@ jobs:
 
   run-tests:
     name: Tests
-    needs: setup-tests
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: [ "3.10", "3.14" ]
-    env:
-      SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download contracts
-        uses: actions/download-artifact@v4
-        with:
-          name: contract-artifacts
-          path: starknet_py/tests/e2e/mock/
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.14"
-          cache: 'pip'
-
-      # ====================== SETUP PYTHON ====================== #
-
-      - name: Install poetry
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'poetry'
-
-      - name: Install dependencies
-        run: |
-          poetry install
-
-      # ====================== SETUP DEVNET ====================== #
-
-      - name: Install devnet
-        run: ./starknet_py/tests/install_devnet.sh
-
-      # ====================== RUN TESTS ====================== #
-
-      - name: Check circular imports
-        run: |
-          poetry run poe circular_imports_check
-
-      - uses: asdf-vm/actions/setup@b7bcd026f18772e44fe1026d729e1611cc435d47 # v4.0.1
-
-      - name: Run tests
-        run: |
-          poetry run poe test_ci_v2
-          poetry run poe test_ci_v1
-
-      - name: Generate coverage in XML
-        run: |
-          poetry run coverage xml
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
-
-  # ---------------------------------------------------------- #
-  # .....................RUN-LEDGER-TESTS..................... #
-  # ---------------------------------------------------------- #
-
-  run-ledger-tests:
-    name: Ledger Tests
     needs: setup-tests
     runs-on: ubuntu-latest
     strategy:
@@ -252,6 +182,7 @@ jobs:
       - name: Pull speculos image
         run: docker pull ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools@sha256:${{ env.LEDGER_APP_DEV_TOOLS_SHA }}
 
+
       - name: Clone LedgerHQ Starknet app repository
         run: git clone https://github.com/LedgerHQ/app-starknet.git
 
@@ -295,9 +226,16 @@ jobs:
 
       # ====================== RUN TESTS ====================== #
 
+      - name: Check circular imports
+        run: |
+          poetry run poe circular_imports_check
+
+      - uses: asdf-vm/actions/setup@v3
+
       - name: Run tests
         run: |
-          poetry run poe test_ci_ledger
+          poetry run poe test_ci_v2
+          poetry run poe test_ci_v1
 
       - name: Generate coverage in XML
         run: |
@@ -323,7 +261,6 @@ jobs:
       # TODO(#1582): Remove braavos envs once integration is restored
       SEPOLIA_BRAAVOS_ACCOUNT_ADDRESS: ${{ secrets.SEPOLIA_BRAAVOS_ACCOUNT_ADDRESS }}
       SEPOLIA_BRAAVOS_ACCOUNT_PRIVATE_KEY: ${{ secrets.SEPOLIA_BRAAVOS_ACCOUNT_PRIVATE_KEY }}
-      INTEGRATION_RPC_URL: ${{ secrets.INTEGRATION_RPC_URL }}
     steps:
       - uses: actions/checkout@v4
 
@@ -351,6 +288,15 @@ jobs:
           python-version: "3.14"
           cache: 'poetry'
 
+      - name: Install dependencies needed for HIDAPI and Pillow
+        run: |
+          sudo apt-get update
+          sudo apt install python3-dev libusb-1.0-0-dev libudev-dev libjpeg-dev
+
+      - name: Install dependencies
+        run: |
+          poetry install -E ledger
+
       # ====================== SETUP DEVNET ====================== #
 
       - name: Install devnet
@@ -362,7 +308,7 @@ jobs:
         run: |
           poetry run poe circular_imports_check
 
-      - uses: asdf-vm/actions/setup@b7bcd026f18772e44fe1026d729e1611cc435d47 # v4.0.1
+      - uses: asdf-vm/actions/setup@v3
 
       - name: Run tests
         run: |
@@ -384,7 +330,7 @@ jobs:
   # ---------------------------------------------------------- #
 
   run-tests-windows:
-    # if: ${{ github.event_name != 'pull_request' }}
+    if: ${{ github.event_name != 'pull_request' }}
     name: Tests Windows
     needs: setup-tests
     runs-on: windows-latest
@@ -394,9 +340,11 @@ jobs:
         python-version: [ "3.10", "3.14" ]
     env:
       SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
-      DEVNET_URL: http://localhost:5050
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@dc6353516c68da0f06325f42ad880f76a5e77ec9
+        with:
+          toolchain: 1.83.0
 
       - name: Download contracts
         uses: actions/download-artifact@v4
@@ -411,16 +359,19 @@ jobs:
 
       # ====================== SETUP DEVNET ====================== #
 
-      - name: Build devnet Docker image
-        run: |
-          docker build -f Dockerfile.devnet -t starknet-devnet:local --build-arg DEVNET_SHA=${{ env.DEVNET_SHA }} .
-        shell: pwsh
+      - name: Cache devnet build
+        id: windows-devnet-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}\starknet_py\tests\e2e\devnet\bin
+          key: ${{ runner.os }}-devnet-${{ env.DEVNET_SHA }}
 
-      - name: Start devnet container
+      - name: Install devnet
+        if: steps.windows-devnet-cache.outputs.cache-hit != 'true'
         run: |
-          docker run -d --name starknet-devnet -p 5050:5050 starknet-devnet:local --accounts 1 --seed 1 --state-archive-capacity full --initial-balance 1000000000000000000000000000000000000000000000000000000000000000000 --predeclare-argent
+          $DEVNET_INSTALL_DIR = "${{ github.workspace }}\starknet_py\tests\e2e\devnet"
+          cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --rev ${{ env.DEVNET_SHA }} --root $DEVNET_INSTALL_DIR
         shell: pwsh
-
       # ====================== SETUP PYTHON ====================== #
 
       - name: Install poetry
@@ -506,7 +457,7 @@ jobs:
 
       # ====================== RUN TESTS ====================== #
 
-      - uses: asdf-vm/actions/setup@b7bcd026f18772e44fe1026d729e1611cc435d47 # v4.0.1
+      - uses: asdf-vm/actions/setup@v3
 
       - name: Run tests
         run: |
@@ -525,7 +476,7 @@ jobs:
   # ---------------------------------------------------------- #
 
   run-docs-tests-windows:
-    # if: ${{ github.event_name != 'pull_request' }}
+    if: ${{ github.event_name != 'pull_request' }}
     name: Docs Tests Windows
     needs: setup-tests
     runs-on: windows-latest
@@ -533,10 +484,11 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [ "3.10", "3.14" ]
-    env:
-      DEVNET_URL: http://localhost:5050
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@dc6353516c68da0f06325f42ad880f76a5e77ec9
+        with:
+          toolchain: 1.83.0
 
       - name: Download contracts
         uses: actions/download-artifact@v4
@@ -568,14 +520,18 @@ jobs:
 
       # ====================== SETUP DEVNET ====================== #
 
-      - name: Build devnet Docker image
-        run: |
-          docker build -f Dockerfile.devnet -t starknet-devnet:local --build-arg DEVNET_SHA=${{ env.DEVNET_SHA }} .
-        shell: pwsh
+      - name: Cache devnet build
+        id: windows-devnet-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}\starknet_py\tests\e2e\devnet\bin
+          key: ${{ runner.os }}-devnet-${{ env.DEVNET_SHA }}
 
-      - name: Start devnet container
+      - name: Install devnet
+        if: steps.windows-devnet-cache.outputs.cache-hit != 'true'
         run: |
-          docker run -d --name starknet-devnet -p 5050:5050 starknet-devnet:local --accounts 1 --seed 1 --state-archive-capacity full --initial-balance 1000000000000000000000000000000000000000000000000000000000000000000 --predeclare-argent
+          $DEVNET_INSTALL_DIR = "${{ github.workspace }}\starknet_py\tests\e2e\devnet"
+          cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --rev ${{ env.DEVNET_SHA }} --root $DEVNET_INSTALL_DIR
         shell: pwsh
 
       # ====================== RUN TESTS ====================== #
