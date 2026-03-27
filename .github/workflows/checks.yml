@@ -342,8 +342,8 @@ jobs:
         python-version: [ "3.10", "3.14" ]
     env:
       SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
-      DEVNET_URL: http://localhost:5050
-      DEVNET_FORK_URL: http://localhost:5051
+      DEVNET_URL: http://127.0.0.1:5050
+      DEVNET_FORK_URL: http://127.0.0.1:5051
     steps:
       - uses: actions/checkout@v4
 
@@ -382,7 +382,7 @@ jobs:
         shell: pwsh
         run: |
           Get-Content devnet.log
-          Invoke-RestMethod -Uri "http://127.0.0.1:5050/is_alive"
+          Invoke-RestMethod -Uri "$env:DEVNET_URL/is_alive"
 
       # ====================== SETUP PYTHON ====================== #
 
@@ -410,6 +410,8 @@ jobs:
       - name: Run tests
         run: |
           poetry run poe test_ci_v2
+          $response = Invoke-RestMethod -Uri $env:DEVNET_URL -Method POST -ContentType "application/json" -Body '{"jsonrpc":"2.0","method":"devnet_restart","params":{},"id":1}'
+          Write-Host "Response: $($response | ConvertTo-Json -Depth 5)"
           poetry run poe test_ci_v1
 
       - name: Generate coverage in XML
@@ -498,7 +500,7 @@ jobs:
       matrix:
         python-version: [ "3.10", "3.14" ]
     env:
-      DEVNET_URL: http://localhost:5050
+      DEVNET_URL: http://127.0.0.1:5050
     steps:
       - uses: actions/checkout@v4
 
@@ -554,13 +556,15 @@ jobs:
         shell: pwsh
         run: |
           Get-Content devnet.log
-          Invoke-RestMethod -Uri "http://127.0.0.1:5050/is_alive"
+          Invoke-RestMethod -Uri "$env:DEVNET_URL/is_alive"
 
       # ====================== RUN TESTS ====================== #
 
       - name: Run tests
         run: |
           poetry run poe test_ci_docs_v2
+          $response = Invoke-RestMethod -Uri $env:DEVNET_URL -Method POST -ContentType "application/json" -Body '{"jsonrpc":"2.0","method":"devnet_restart","params":{},"id":1}'
+          Write-Host "Response: $($response | ConvertTo-Json -Depth 5)"
           poetry run poe test_ci_docs_v1
 
       - name: Generate coverage in XML
