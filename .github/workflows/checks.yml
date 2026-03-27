@@ -2,8 +2,7 @@ name: Checks
 
 env:
   CAIRO_LANG_VERSION: "0.13.1"
-  # TODO(#1611)
-  DEVNET_SHA: b761edef5b89a4faa7a972d7172a324cd646d612 # v0.7.0
+  DEVNET_VERSION: "0.7.0"
   LEDGER_APP_SHA: 768a7b47b0da681b28112342edd76e2c9b292c4e # v2.3.1
   LEDGER_APP_DEV_TOOLS_SHA: a845b2ab0b5dd824133f73858f6f373edea85ec1bd828245bf50ce9700f33bcb # v4.5.0
 
@@ -330,7 +329,7 @@ jobs:
   # ---------------------------------------------------------- #
 
   run-tests-windows:
-    if: ${{ github.event_name != 'pull_request' }}
+    # if: ${{ github.event_name != 'pull_request' }}
     name: Tests Windows
     needs: setup-tests
     runs-on: windows-latest
@@ -340,11 +339,9 @@ jobs:
         python-version: [ "3.10", "3.14" ]
     env:
       SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
+      DEVNET_URL: http://localhost:5050
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@dc6353516c68da0f06325f42ad880f76a5e77ec9
-        with:
-          toolchain: 1.83.0
 
       - name: Download contracts
         uses: actions/download-artifact@v4
@@ -359,19 +356,11 @@ jobs:
 
       # ====================== SETUP DEVNET ====================== #
 
-      - name: Cache devnet build
-        id: windows-devnet-cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}\starknet_py\tests\e2e\devnet\bin
-          key: ${{ runner.os }}-devnet-${{ env.DEVNET_SHA }}
-
-      - name: Install devnet
-        if: steps.windows-devnet-cache.outputs.cache-hit != 'true'
+      - name: Start devnet
         run: |
-          $DEVNET_INSTALL_DIR = "${{ github.workspace }}\starknet_py\tests\e2e\devnet"
-          cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --rev ${{ env.DEVNET_SHA }} --root $DEVNET_INSTALL_DIR
+          docker run -d --name starknet-devnet -p 5050:5050 shardlabs/starknet-devnet-rs:${{ env.DEVNET_VERSION }} --accounts 1 --seed 1 --state-archive-capacity full --initial-balance 1000000000000000000000000000000000000000000000000000000000000000000 --predeclare-argent
         shell: pwsh
+
       # ====================== SETUP PYTHON ====================== #
 
       - name: Install poetry
@@ -476,7 +465,7 @@ jobs:
   # ---------------------------------------------------------- #
 
   run-docs-tests-windows:
-    if: ${{ github.event_name != 'pull_request' }}
+    # if: ${{ github.event_name != 'pull_request' }}
     name: Docs Tests Windows
     needs: setup-tests
     runs-on: windows-latest
@@ -484,11 +473,10 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [ "3.10", "3.14" ]
+    env:
+      DEVNET_URL: http://localhost:5050
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@dc6353516c68da0f06325f42ad880f76a5e77ec9
-        with:
-          toolchain: 1.83.0
 
       - name: Download contracts
         uses: actions/download-artifact@v4
@@ -520,18 +508,9 @@ jobs:
 
       # ====================== SETUP DEVNET ====================== #
 
-      - name: Cache devnet build
-        id: windows-devnet-cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}\starknet_py\tests\e2e\devnet\bin
-          key: ${{ runner.os }}-devnet-${{ env.DEVNET_SHA }}
-
-      - name: Install devnet
-        if: steps.windows-devnet-cache.outputs.cache-hit != 'true'
+      - name: Start devnet
         run: |
-          $DEVNET_INSTALL_DIR = "${{ github.workspace }}\starknet_py\tests\e2e\devnet"
-          cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --rev ${{ env.DEVNET_SHA }} --root $DEVNET_INSTALL_DIR
+          docker run -d --name starknet-devnet -p 5050:5050 shardlabs/starknet-devnet-rs:${{ env.DEVNET_VERSION }} --accounts 1 --seed 1 --state-archive-capacity full --initial-balance 1000000000000000000000000000000000000000000000000000000000000000000 --predeclare-argent
         shell: pwsh
 
       # ====================== RUN TESTS ====================== #
