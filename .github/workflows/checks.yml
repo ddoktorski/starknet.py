@@ -373,7 +373,7 @@ jobs:
       - name: Start Devnet via WSL
         shell: wsl-bash {0}
         run: |
-          nohup ./starknet-devnet --host 0.0.0.0 --port 5050 --accounts 1 --seed 1 --state-archive-capacity full --initial-balance 1000000000000000000000000000000000000000000000000000000000000000000 --predeclare-argent > devnet.log 2>&1 &
+          nohup ./starknet-devnet --port 5050 --accounts 1 --seed 1 --state-archive-capacity full --initial-balance 1000000000000000000000000000000000000000000000000000000000000000000 --predeclare-argent > devnet.log 2>&1 &
 
           # Give it a few seconds to boot up
           sleep 20
@@ -545,7 +545,7 @@ jobs:
       - name: Start Devnet via WSL
         shell: wsl-bash {0}
         run: |
-          nohup ./starknet-devnet --host 0.0.0.0 --port 5050 --accounts 1 --seed 1 --state-archive-capacity full --initial-balance 1000000000000000000000000000000000000000000000000000000000000000000 --predeclare-argent > devnet.log 2>&1 &
+          nohup ./starknet-devnet --port 5050 --accounts 1 --seed 1 --state-archive-capacity full --initial-balance 1000000000000000000000000000000000000000000000000000000000000000000 --predeclare-argent > devnet.log 2>&1 &
 
           # Give it a few seconds to boot up
           sleep 20
