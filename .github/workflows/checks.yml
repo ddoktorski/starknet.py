@@ -11,6 +11,7 @@ on:
     branches:
       - master
       - development
+      - fix-windows-ci-fork-test # TODO: remove
   pull_request:
   workflow_dispatch:
 
@@ -125,6 +126,7 @@ jobs:
 
   run-tests:
     name: Tests
+    if: ${{ github.event_name != 'push' }} # TODO: remove
     needs: setup-tests
     runs-on: ubuntu-latest
     strategy:
@@ -249,6 +251,7 @@ jobs:
 
   run-tests-on-networks:
     name: Tests on networks (testnet)
+    if: ${{ github.event_name != 'push' }} # TODO: remove
     needs: setup-tests
     runs-on: ubuntu-latest
     strategy:
@@ -404,6 +407,7 @@ jobs:
 
   run-docs-tests:
     name: Docs Tests
+    if: ${{ github.event_name != 'push' }} # TODO: remove
     needs: setup-tests
     runs-on: ubuntu-latest
     strategy:
