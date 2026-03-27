@@ -76,7 +76,12 @@ def devnet() -> Generator[str, None, None]:
 def devnet_forking_mode() -> Generator[str, None, None]:
     """
     Runs devnet instance once per module and returns its address.
+    If DEVNET_FORK_URL environment variable is set, uses that instead of starting a new instance.
     """
-    devnet_port, proc = start_devnet(fork_mode=True)
-    yield f"http://localhost:{devnet_port}"
-    proc.kill()
+    devnet_fork_url = os.environ.get("DEVNET_FORK_URL")
+    if devnet_fork_url:
+        yield devnet_fork_url
+    else:
+        devnet_port, proc = start_devnet(fork_mode=True)
+        yield f"http://localhost:{devnet_port}"
+        proc.kill()

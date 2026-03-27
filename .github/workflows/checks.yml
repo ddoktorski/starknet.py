@@ -340,6 +340,7 @@ jobs:
     env:
       SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
       DEVNET_URL: http://localhost:5050
+      DEVNET_FORK_URL: http://localhost:5051
     steps:
       - uses: actions/checkout@v4
 
@@ -359,6 +360,7 @@ jobs:
       - name: Start devnet
         run: |
           docker run -d --name starknet-devnet -p 5050:5050 shardlabs/starknet-devnet-rs:${{ env.DEVNET_VERSION }} --accounts 1 --seed 1 --state-archive-capacity full --initial-balance 1000000000000000000000000000000000000000000000000000000000000000000 --predeclare-argent
+          docker run -d --name starknet-devnet-fork -p 5051:5050 shardlabs/starknet-devnet-rs:${{ env.DEVNET_VERSION }} --accounts 1 --seed 1 --state-archive-capacity full --initial-balance 1000000000000000000000000000000000000000000000000000000000000000000 --predeclare-argent --fork-network ${{ secrets.SEPOLIA_RPC_URL }}
         shell: pwsh
 
       # ====================== SETUP PYTHON ====================== #
