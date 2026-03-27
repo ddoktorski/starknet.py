@@ -362,8 +362,8 @@ jobs:
 
       - name: Start devnet
         run: |
-          docker run -d --name starknet-devnet -p 5050:5050 shardlabs/starknet-devnet-rs:${{ env.DEVNET_VERSION }} --accounts 1 --seed 1 --state-archive-capacity full --initial-balance 1000000000000000000000000000000000000000000000000000000000000000000 --predeclare-argent
-          docker run -d --name starknet-devnet-fork -p 5051:5050 shardlabs/starknet-devnet-rs:${{ env.DEVNET_VERSION }} --accounts 1 --seed 1 --state-archive-capacity full --initial-balance 1000000000000000000000000000000000000000000000000000000000000000000 --predeclare-argent --fork-network ${{ secrets.SEPOLIA_RPC_URL }}
+          docker run -d --platform linux/amd64 --name starknet-devnet -p 5050:5050 shardlabs/starknet-devnet-rs:${{ env.DEVNET_VERSION }} --accounts 1 --seed 1 --state-archive-capacity full --initial-balance 1000000000000000000000000000000000000000000000000000000000000000000 --predeclare-argent
+          docker run -d --platform linux/amd64 --name starknet-devnet-fork -p 5051:5050 shardlabs/starknet-devnet-rs:${{ env.DEVNET_VERSION }} --accounts 1 --seed 1 --state-archive-capacity full --initial-balance 1000000000000000000000000000000000000000000000000000000000000000000 --predeclare-argent --fork-network ${{ secrets.SEPOLIA_RPC_URL }}
         shell: pwsh
 
       # ====================== SETUP PYTHON ====================== #
@@ -516,7 +516,7 @@ jobs:
 
       - name: Start devnet
         run: |
-          docker run -d --name starknet-devnet -p 5050:5050 shardlabs/starknet-devnet-rs:${{ env.DEVNET_VERSION }} --accounts 1 --seed 1 --state-archive-capacity full --initial-balance 1000000000000000000000000000000000000000000000000000000000000000000 --predeclare-argent
+          docker run -d --platform linux/amd64 --name starknet-devnet -p 5050:5050 shardlabs/starknet-devnet-rs:${{ env.DEVNET_VERSION }} --accounts 1 --seed 1 --state-archive-capacity full --initial-balance 1000000000000000000000000000000000000000000000000000000000000000000 --predeclare-argent
         shell: pwsh
 
       # ====================== RUN TESTS ====================== #
