@@ -378,11 +378,21 @@ jobs:
           # Give it a few seconds to boot up
           sleep 20
 
+      - name: Start Devnet with fork mode via WSL
+        shell: wsl-bash {0}
+        run: |
+          nohup ./starknet-devnet --port 5051 --accounts 1 --seed 1 --state-archive-capacity full --initial-balance 1000000000000000000000000000000000000000000000000000000000000000000 --predeclare-argent --fork-network ${{ env.SEPOLIA_RPC_URL }}  > devnet_fork.log 2>&1 &
+
+          # Give it a few seconds to boot up
+          sleep 20
+
       - name: Verify devnet is running
         shell: pwsh
         run: |
           Get-Content devnet.log
+          Get-Content devnet_fork.log
           Invoke-RestMethod -Uri "$env:DEVNET_URL/is_alive"
+          Invoke-RestMethod -Uri "$env:DEVNET_FORK_URL/is_alive"
 
       # ====================== SETUP PYTHON ====================== #
 
@@ -408,10 +418,10 @@ jobs:
           poetry run poe circular_imports_check
 
       - name: Run tests
+        env:
+            PYTEST_XDIST: "0"
         run: |
           poetry run poe test_ci_v2
-          $response = Invoke-RestMethod -Uri $env:DEVNET_URL -Method POST -ContentType "application/json" -Body '{"jsonrpc":"2.0","method":"devnet_restart","params":{},"id":1}'
-          Write-Host "Response: $($response | ConvertTo-Json -Depth 5)"
           poetry run poe test_ci_v1
 
       - name: Generate coverage in XML
@@ -561,10 +571,10 @@ jobs:
       # ====================== RUN TESTS ====================== #
 
       - name: Run tests
+        env:
+          PYTEST_XDIST: "0"
         run: |
           poetry run poe test_ci_docs_v2
-          $response = Invoke-RestMethod -Uri $env:DEVNET_URL -Method POST -ContentType "application/json" -Body '{"jsonrpc":"2.0","method":"devnet_restart","params":{},"id":1}'
-          Write-Host "Response: $($response | ConvertTo-Json -Depth 5)"
           poetry run poe test_ci_docs_v1
 
       - name: Generate coverage in XML

@@ -67,7 +67,7 @@ def devnet() -> Generator[str, None, None]:
     """
     devnet_url = os.environ.get("DEVNET_URL")
     if devnet_url:
-        DevnetClient(node_url=devnet_url).restart()
+        asyncio.run(DevnetClient(node_url=devnet_url).restart())
         yield devnet_url
     else:
         devnet_port, proc = start_devnet()
@@ -83,7 +83,7 @@ def devnet_forking_mode() -> Generator[str, None, None]:
     """
     devnet_fork_url = os.environ.get("DEVNET_FORK_URL")
     if devnet_fork_url:
-        DevnetClient(node_url=devnet_fork_url + "/rpc").restart()
+        asyncio.run(DevnetClient(node_url=devnet_fork_url).restart())
         yield devnet_fork_url
     else:
         devnet_port, proc = start_devnet(fork_mode=True)
