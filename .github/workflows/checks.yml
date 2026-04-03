@@ -40,7 +40,7 @@ jobs:
       - name: Set up Python 3.14
         uses: actions/setup-python@v5
         with:
-          python-version: "3.14"
+          python-version: "3.14.0"
           cache: 'poetry'
 
       - name: Install dependencies needed for HIDAPI and Pillow
@@ -370,18 +370,18 @@ jobs:
           tar.exe -xzf devnet.tar.gz
 
       # Boot the extracted Linux binary inside WSL
-      - name: Start Devnet via WSL
-        shell: wsl-bash {0}
-        run: |
-          nohup ./starknet-devnet --port 5050 --accounts 1 --seed 1 --state-archive-capacity full --initial-balance 1000000000000000000000000000000000000000000000000000000000000000000 --predeclare-argent > devnet.log 2>&1 &
-
-          # Give it a few seconds to boot up
-          sleep 10
-
       - name: Start Devnet with fork mode via WSL
         shell: wsl-bash {0}
         run: |
           nohup ./starknet-devnet --port 5051 --accounts 1 --seed 1 --state-archive-capacity full --initial-balance 1000000000000000000000000000000000000000000000000000000000000000000 --predeclare-argent --fork-network ${{ env.SEPOLIA_RPC_URL }}  > devnet_fork.log 2>&1 &
+
+          # Give it a few seconds to boot up
+          sleep 10
+
+      - name: Start Devnet via WSL
+        shell: wsl-bash {0}
+        run: |
+          nohup ./starknet-devnet --port 5050 --accounts 1 --seed 1 --state-archive-capacity full --initial-balance 1000000000000000000000000000000000000000000000000000000000000000000 --predeclare-argent > devnet.log 2>&1 &
 
           # Give it a few seconds to boot up
           sleep 10
