@@ -334,7 +334,6 @@ jobs:
   run-tests-windows:
     # if: ${{ github.event_name != 'pull_request' }}
     name: Tests Windows
-    needs: setup-tests
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -347,12 +346,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download contracts
-        uses: actions/download-artifact@v4
-        with:
-          name: contract-artifacts
-          path: starknet_py/tests/e2e/mock/
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.14"
@@ -361,7 +354,35 @@ jobs:
       # ====================== SETUP DEVNET ====================== #
 
       - name: Setup WSL
-        uses: Vampire/setup-wsl@6a8db447be7ed35f2f499c02c6e60ff77ef11278 # v6.0.0
+        uses: Vampire/setup-wsl@d1da7f2c0322a5ee4f24975344f67fc0f5baf364 # v7.0.0
+        with:
+          additional-packages: curl ca-certificates uuid-runtime jq git
+
+      # ====================== COMPILE CONTRACTS ====================== #
+
+      - name: Install asdf in WSL
+        shell: wsl-bash {0}
+        run: |
+          curl -sL "https://github.com/asdf-vm/asdf/releases/download/v0.18.1/asdf-v0.18.1-linux-amd64.tar.gz" -o asdf.tar.gz
+          tar -xzf asdf.tar.gz
+          sudo mv asdf /usr/local/bin/
+
+          echo 'export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"' >> ~/.bashrc
+          export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
+
+          asdf version
+
+      - name: Compile contracts v2 via WSL
+        shell: wsl-bash {0}
+        run: |
+          export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
+          bash starknet_py/tests/e2e/mock/compile_contracts.sh contracts_v2
+
+      - name: Compile contracts v1 via WSL
+        shell: wsl-bash {0}
+        run: |
+          export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
+          bash starknet_py/tests/e2e/mock/compile_contracts.sh contracts_v1
 
       - name: Download and Extract Devnet (PowerShell)
         shell: pwsh
@@ -503,7 +524,6 @@ jobs:
   run-docs-tests-windows:
     # if: ${{ github.event_name != 'pull_request' }}
     name: Docs Tests Windows
-    needs: setup-tests
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -513,12 +533,6 @@ jobs:
       DEVNET_URL: http://127.0.0.1:5050
     steps:
       - uses: actions/checkout@v4
-
-      - name: Download contracts
-        uses: actions/download-artifact@v4
-        with:
-          name: contract-artifacts
-          path: starknet_py/tests/e2e/mock/
 
       - uses: actions/setup-python@v5
         with:
@@ -545,7 +559,35 @@ jobs:
       # ====================== SETUP DEVNET ====================== #
 
       - name: Setup WSL
-        uses: Vampire/setup-wsl@6a8db447be7ed35f2f499c02c6e60ff77ef11278 # v6.0.0
+        uses: Vampire/setup-wsl@d1da7f2c0322a5ee4f24975344f67fc0f5baf364 # v7.0.0
+        with:
+          additional-packages: curl ca-certificates uuid-runtime jq git
+
+      # ====================== COMPILE CONTRACTS ====================== #
+
+      - name: Install asdf in WSL
+        shell: wsl-bash {0}
+        run: |
+          curl -sL "https://github.com/asdf-vm/asdf/releases/download/v0.18.1/asdf-v0.18.1-linux-amd64.tar.gz" -o asdf.tar.gz
+          tar -xzf asdf.tar.gz
+          sudo mv asdf /usr/local/bin/
+
+          echo 'export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"' >> ~/.bashrc
+          export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
+
+          asdf version
+
+      - name: Compile contracts v2 via WSL
+        shell: wsl-bash {0}
+        run: |
+          export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
+          bash starknet_py/tests/e2e/mock/compile_contracts.sh contracts_v2
+
+      - name: Compile contracts v1 via WSL
+        shell: wsl-bash {0}
+        run: |
+          export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
+          bash starknet_py/tests/e2e/mock/compile_contracts.sh contracts_v1
 
       - name: Download and Extract Devnet (PowerShell)
         shell: pwsh
