@@ -1,12 +1,10 @@
-import sys
-
 import pytest
 
-from starknet_py.tests.e2e.fixtures.misc import load_contract
+from starknet_py.tests.e2e.fixtures.misc import _contract_dir, load_contract
 
 
 @pytest.mark.skipif(
-    "--contract_dir=v2" not in sys.argv,
+    _contract_dir != "v2",
     reason="Contract exists only in v2 directory",
 )
 @pytest.mark.asyncio
@@ -17,7 +15,7 @@ async def test_simple_declare_and_deploy(account):
     from starknet_py.net.client_models import ResourceBounds, ResourceBoundsMapping
 
     # docs: end
-    compiled_contract = load_contract("AccountCopy1")
+    compiled_contract = load_contract("AccountCopy1", package="contracts_v2")
     constructor_args = {"public_key": 0x123}
 
     # docs: start

@@ -1,4 +1,3 @@
-import sys
 from typing import cast
 from unittest.mock import AsyncMock, patch
 
@@ -33,7 +32,7 @@ from starknet_py.net.signer.key_pair import KeyPair
 from starknet_py.net.udc_deployer.deployer import Deployer
 from starknet_py.tests.e2e.fixtures.accounts import AccountPrerequisites
 from starknet_py.tests.e2e.fixtures.constants import MAX_RESOURCE_BOUNDS
-from starknet_py.tests.e2e.fixtures.misc import load_contract
+from starknet_py.tests.e2e.fixtures.misc import _contract_dir, load_contract
 
 
 @pytest.mark.run_on_devnet
@@ -53,7 +52,7 @@ async def test_get_balance_throws_when_token_not_specified(account):
 
 
 @pytest.mark.skipif(
-    "--contract_dir=v1" in sys.argv,
+    _contract_dir == "v1",
     reason="Contract exists only in v2 directory",
 )
 @pytest.mark.asyncio
@@ -64,7 +63,7 @@ async def test_balance_when_token_specified(account, erc20_contract):
 
 
 @pytest.mark.skipif(
-    "--contract_dir=v1" in sys.argv,
+    _contract_dir == "v1",
     reason="Contract exists only in v2 directory",
 )
 @pytest.mark.asyncio
@@ -735,7 +734,7 @@ async def test_deploy_account_v3_auto_estimate_tip(
 
 @pytest.mark.asyncio
 async def test_declare_v3_with_tip(account):
-    compiled_contract = load_contract("TestContract3")
+    compiled_contract = load_contract("TestContract3", package="contracts_v2")
 
     tip = 12345
     signed_tx = await account.sign_declare_v3(
@@ -757,7 +756,7 @@ async def test_declare_v3_auto_estimate_tip(
     get_block_with_txs_path,
     block_with_tips_mock,
 ):
-    compiled_contract = load_contract("TestContract4")
+    compiled_contract = load_contract("TestContract4", package="contracts_v2")
 
     with patch(get_block_with_txs_path, AsyncMock()) as mocked_block_with_txs:
         mocked_block_with_txs.return_value = block_with_tips_mock
