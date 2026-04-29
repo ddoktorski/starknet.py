@@ -10,7 +10,7 @@ from starknet_py.tests.e2e.fixtures.misc import load_contract
 
 @pytest.mark.asyncio
 async def test_declare_v3_tx(account):
-    contract = load_contract(contract_name="TestContract2", package="contracts_v2")
+    contract = load_contract(contract_name="TestContract5", package="contracts_v2")
     declare_tx = await account.sign_declare_v3(
         compiled_contract=contract["sierra"],
         compiled_class_hash=compute_casm_class_hash(
